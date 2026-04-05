@@ -6,5 +6,5 @@
   tasks:
     - name: Include renewal tasks
       ansible.builtin.include_role:
-        name: certbot
+        name: ../roles/certbot
         tasks_from: renew
