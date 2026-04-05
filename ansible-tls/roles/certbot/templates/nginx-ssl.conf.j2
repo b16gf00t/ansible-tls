@@ -1,0 +1,36 @@
+# HTTP → HTTPS redirect
+server {
+    listen 80;
+    server_name {{ domain_name }} www.{{ domain_name }};
+    return 301 https://{{ domain_name }}$request_uri;
+}
+
+# HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name {{ domain_name }} www.{{ domain_name }};
+
+    root /var/www/{{ domain_name }}/html;
+    index index.html;
+
+    # SSL certificates (managed by Let's Encrypt)
+    ssl_certificate     /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain_name }}/privkey.pem;
+
+    # SSL settings (recommended by Mozilla)
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (uncomment after verifying HTTPS works)
+    # add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # OCSP Stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/letsencrypt/live/{{ domain_name }}/chain.pem;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

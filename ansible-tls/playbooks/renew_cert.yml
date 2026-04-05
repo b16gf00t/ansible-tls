@@ -1,0 +1,10 @@
+---
+- name: Renew TLS certificate
+  hosts: webserver
+  become: yes
+
+  tasks:
+    - name: Include renewal tasks
+      ansible.builtin.include_role:
+        name: certbot
+        tasks_from: renew

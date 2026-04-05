@@ -1,0 +1,8 @@
+---
+- name: Include install tasks
+  ansible.builtin.include_tasks: install.yml
+  tags: [install]
+
+- name: Include obtain certificate tasks
+  ansible.builtin.include_tasks: obtain.yml
+  tags: [obtain]

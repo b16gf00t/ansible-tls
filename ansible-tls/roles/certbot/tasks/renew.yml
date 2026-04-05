@@ -1,0 +1,35 @@
+---
+- name: Check certificate expiration
+  ansible.builtin.command: >
+    openssl x509 -checkend 2592000
+    -in /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+  register: cert_check
+  failed_when: false
+  changed_when: false
+
+- name: Display certificate status
+  ansible.builtin.debug:
+    msg: >-
+      {{ 'Certificate is valid for more than 30 days'
+         if cert_check.rc == 0
+         else 'Certificate expires within 30 days — renewing' }}
+
+- name: Renew certificate if expiring soon
+  ansible.builtin.command: >
+    certbot renew
+    --nginx
+    --non-interactive
+    --cert-name {{ domain_name }}
+  when: cert_check.rc != 0
+  notify: Reload Nginx
+
+- name: Verify certificate after renewal
+  ansible.builtin.command: >
+    openssl x509 -noout -dates
+    -in /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+  register: cert_dates
+  changed_when: false
+
+- name: Show certificate validity dates
+  ansible.builtin.debug:
+    msg: "{{ cert_dates.stdout }}"

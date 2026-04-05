@@ -1,0 +1,33 @@
+---
+- name: Check if certificate already exists
+  ansible.builtin.stat:
+    path: "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem"
+  register: cert_file
+
+- name: Obtain SSL certificate from Let's Encrypt
+  ansible.builtin.command: >
+    certbot certonly
+    --nginx
+    --non-interactive
+    --agree-tos
+    --email {{ email }}
+    --domains {{ domain_name }}
+    --domains www.{{ domain_name }}
+  when: not cert_file.stat.exists
+  notify: Reload Nginx
+
+- name: Deploy Nginx SSL configuration
+  ansible.builtin.template:
+    src: nginx-ssl.conf.j2
+    dest: "/etc/nginx/sites-available/{{ domain_name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload Nginx
+
+- name: Ensure site is enabled
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ domain_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ domain_name }}"
+    state: link
+  notify: Reload Nginx

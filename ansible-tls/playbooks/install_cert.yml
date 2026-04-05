@@ -1,0 +1,8 @@
+---
+- name: Install TLS certificate with Let's Encrypt
+  hosts: webserver
+  become: yes
+
+  roles:
+    - role: certbot
+      tags: [certbot]
